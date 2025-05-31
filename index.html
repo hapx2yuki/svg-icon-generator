@@ -3,34 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SVG Icon Generator</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>SVG Icon Generator - AIプロンプトでアイコン生成</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* 追加のスタイル */
+        .mode-selector {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .mode-btn {
+            padding: 10px 20px;
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .mode-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .example-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .example-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .example-card {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .example-card:hover {
+            background: rgba(99, 102, 241, 0.1);
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .example-card svg {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 10px;
+        }
+        
+        .example-card p {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+        
+        #advancedOptions {
+            display: none;
+        }
+        
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-item h4 {
+            color: var(--primary);
+            font-size: 1.2em;
+            margin: 0;
+        }
+        
+        .stat-item p {
+            color: var(--text-secondary);
+            font-size: 0.8em;
+            margin: 5px 0 0 0;
+        }
+        
+        .color-presets {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        
+        .color-preset {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .color-preset:hover {
+            transform: scale(1.1);
+            border-color: white;
+        }
+        
+        .color-preset.active {
+            border-color: white;
+            box-shadow: 0 0 10px currentColor;
+        }
+        
+        @media (max-width: 768px) {
+            .mode-selector {
+                flex-wrap: wrap;
+            }
+            
+            .example-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>SVG Icon Generator</h1>
-            <p>プロンプトを入力してSVGアイコンを生成します</p>
+            <p>プロンプトから美しいSVGアイコンを生成</p>
         </header>
         
+        <div class="mode-selector">
+            <button class="mode-btn active" data-mode="simple">シンプル</button>
+            <button class="mode-btn" data-mode="advanced">アドバンス</button>
+            <button class="mode-btn" data-mode="creative">クリエイティブ</button>
+        </div>
+        
         <main>
+            <!-- 例のセクション -->
+            <div class="example-section" id="exampleSection">
+                <h3>クイック例</h3>
+                <div class="example-grid" id="exampleGrid">
+                    <!-- JavaScriptで動的に生成 -->
+                </div>
+            </div>
+            
+            <!-- 入力セクション -->
             <div class="input-section">
                 <label for="prompt">プロンプト：</label>
-                <textarea id="prompt" placeholder="例：青い星のアイコン" rows="3"></textarea>
+                <textarea id="prompt" placeholder="例：青い星のアイコン、回転する歯車、流れる水..." rows="3"></textarea>
                 <button id="generateBtn">アイコンを生成</button>
             </div>
             
+            <!-- プレビューセクション -->
             <div class="preview-section">
                 <h2>プレビュー</h2>
-                <div id="svgPreview" class="svg-preview"></div>
+                <div id="svgPreview" class="svg-preview">
+                    <p style="color: var(--text-secondary);">プロンプトを入力してアイコンを生成してください</p>
+                </div>
                 <div class="button-group" style="display: none;" id="actionButtons">
                     <button id="copyBtn">SVGをコピー</button>
                     <button id="downloadBtn">SVGをダウンロード</button>
                 </div>
+                
+                <!-- 統計情報 -->
+                <div class="stats-container" id="statsContainer" style="display: none;">
+                    <div class="stat-item">
+                        <h4 id="pathCount">0</h4>
+                        <p>パス数</p>
+                    </div>
+                    <div class="stat-item">
+                        <h4 id="nodeCount">0</h4>
+                        <p>ノード数</p>
+                    </div>
+                    <div class="stat-item">
+                        <h4 id="sizeInfo">0x0</h4>
+                        <p>サイズ</p>
+                    </div>
+                </div>
             </div>
             
+            <!-- オプションセクション -->
             <div class="options-section">
                 <h3>オプション</h3>
+                
+                <!-- カラープリセット -->
+                <div class="color-presets">
+                    <div class="color-preset active" style="background: #6366f1" data-color="#6366f1"></div>
+                    <div class="color-preset" style="background: #10b981" data-color="#10b981"></div>
+                    <div class="color-preset" style="background: #f59e0b" data-color="#f59e0b"></div>
+                    <div class="color-preset" style="background: #ef4444" data-color="#ef4444"></div>
+                    <div class="color-preset" style="background: #8b5cf6" data-color="#8b5cf6"></div>
+                    <div class="color-preset" style="background: #ec4899" data-color="#ec4899"></div>
+                    <div class="color-preset" style="background: #000000" data-color="#000000"></div>
+                </div>
+                
                 <div class="option-group">
                     <label for="iconSize">サイズ：</label>
                     <input type="range" id="iconSize" min="24" max="256" value="64">
@@ -41,10 +221,24 @@
                     <input type="range" id="strokeWidth" min="1" max="10" value="2" step="0.5">
                     <span id="strokeValue">2</span>
                 </div>
+                
+                <!-- アドバンスドオプション -->
+                <div id="advancedOptions">
+                    <div class="option-group">
+                        <label for="complexity">複雑さ：</label>
+                        <input type="range" id="complexity" min="1" max="10" value="5">
+                        <span id="complexityValue">5</span>
+                    </div>
+                    <div class="option-group">
+                        <label for="strokeColor">カスタムカラー：</label>
+                        <input type="color" id="strokeColor" value="#6366f1">
+                    </div>
+                </div>
             </div>
         </main>
     </div>
     
-    <script src="script.js"></script>
+    <script src="js/svg-engine.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
