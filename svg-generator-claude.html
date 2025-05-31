@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI SVG Generator - プロンプトから自由にアイコン生成</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .examples {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(99, 102, 241, 0.05);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+        
+        .example-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .example-chip {
+            padding: 8px 16px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+        
+        .example-chip:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .generating {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        
+        .error-message {
+            color: #ef4444;
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(239, 68, 68, 0.1);
+            border-radius: 8px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI SVG Generator</h1>
+            <p>プロンプトから自由にSVGアイコンを生成</p>
+        </header>
+        
+        <main>
+            <div class="examples">
+                <h3>例を試してみる：</h3>
+                <div class="example-chips">
+                    <span class="example-chip">笑顔の太陽</span>
+                    <span class="example-chip">飛んでいる紙飛行機</span>
+                    <span class="example-chip">コーヒーカップから湯気</span>
+                    <span class="example-chip">音符と五線譜</span>
+                    <span class="example-chip">山と太陽の風景</span>
+                    <span class="example-chip">ハートを持つ手</span>
+                    <span class="example-chip">稲妻のエフェクト</span>
+                    <span class="example-chip">月と星の夜空</span>
+                </div>
+            </div>
+            
+            <div class="input-section">
+                <label for="prompt">どんなアイコンを作りますか？</label>
+                <textarea id="prompt" placeholder="例：笑顔の太陽、飛んでいる鳥、コーヒーカップなど..." rows="3"></textarea>
+                <button id="generateBtn">アイコンを生成</button>
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+            
+            <div class="preview-section">
+                <h2>プレビュー</h2>
+                <div id="svgPreview" class="svg-preview">
+                    <p style="color: var(--text-secondary);">プロンプトを入力してアイコンを生成してください</p>
+                </div>
+                <div class="button-group" style="display: none;" id="actionButtons">
+                    <button id="copyBtn">SVGをコピー</button>
+                    <button id="downloadBtn">SVGをダウンロード</button>
+                </div>
+            </div>
+            
+            <div class="options-section">
+                <h3>カスタマイズ</h3>
+                <div class="option-group">
+                    <label for="iconSize">サイズ：</label>
+                    <input type="range" id="iconSize" min="24" max="256" value="64">
+                    <span id="sizeValue">64</span>px
+                </div>
+                <div class="option-group">
+                    <label for="strokeWidth">線の太さ：</label>
+                    <input type="range" id="strokeWidth" min="1" max="10" value="2" step="0.5">
+                    <span id="strokeValue">2</span>
+                </div>
+                <div class="option-group">
+                    <label for="strokeColor">色：</label>
+                    <input type="color" id="strokeColor" value="#6366f1">
+                </div>
+                <div class="option-group">
+                    <label for="complexity">複雑さ：</label>
+                    <select id="complexity" style="background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border); padding: 8px; border-radius: 8px;">
+                        <option value="simple">シンプル</option>
+                        <option value="medium" selected>標準</option>
+                        <option value="detailed">詳細</option>
+                    </select>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script>
+// SVGパス生成のためのヘルパー関数
+function generateSvgPath(description) {
+    const prompt = description.toLowerCase();
+    
+    // プロンプトに基づいてSVGパスを生成
+    if (prompt.includes('太陽') || prompt.includes('sun')) {
+        if (prompt.includes('笑顔') || prompt.includes('smile')) {
+            return {
+                paths: [
+                    'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z',
+                    'M8 14s1.5 2 4 2 4-2 4-2',
+                    'M9 9h.01M15 9h.01'
+                ],
+                viewBox: '0 0 24 24'
+            };
+        }
+        return {
+            paths: [
+                'M12 8a4 4 0 100 8 4 4 0 000-8z',
+                'M12 2v2M12 20v2M4.22 4.22l1.42 1.42M16.36 16.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M16.36 7.64l1.42-1.42'
+            ],
+            viewBox: '0 0 24 24'
+        };
+    }
+    
+    if (prompt.includes('紙飛行機') || prompt.includes('paper plane')) {
+        return {
+            paths: ['M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z'],
+            viewBox: '0 0 24 24'
+        };
+    }
+    
+    if (prompt.includes('コーヒー') || prompt.includes('coffee')) {
+        return {
+            paths: [
+                'M18 8h1a4 4 0 010 8h-1M18 8H6v9a4 4 0 004 4h4a4 4 0 004-4V8z',
+                'M6 8V6a2 2 0 012-2h8a2 2 0 012 2v2',
+                'M10 3v2M14 3v2'
+            ],
+            viewBox: '0 0 24 24'
+        };
+    }
+    
+    if (prompt.includes('音符') || prompt.includes('music')) {
+        return {
+            paths: [
+                'M9 18V5l12-2v13',
+                'M9 18c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z',
+                'M21 16c0 1.657-1.343 3-3 3s-3-1.343-3-3 1.343-3 3-3 3 1.343 3 3z'
+            ],
+            viewBox: '0 0 24 24'
+        };
+    }
+    
+    if (prompt.includes('山') || prompt.includes('mountain')) {
+        return {
+            paths: [
+                'M13 2L2 18h20L13 2z',
+                'M13 2l5 8',
+                'M7 13l3-5 2 3'
+            ],
+            viewBox: '0 0 24 24'
+        };
+    }
+    
+    if (prompt.includes('ハート') && prompt.includes('手')) {
+        return {
+            paths: [
+                'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z',
+                'M12 21.23v-5.23'
+            ],
+            viewBox: '0 0 24 24'
+        };
+    }
+    
+    if (prompt.includes('稲妻') || prompt.includes('lightning')) {
+        return {
+            paths: ['M13 2L3 14h8l-2 8 10-12h-8l2-8z'],
+            viewBox: '0 0 24 24'
+        };
+    }
+    
+    if (prompt.includes('月') || prompt.includes('moon')) {
+        if (prompt.includes('星')) {
+            return {
+                paths: [
+                    'M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z',
+                    'M19 3v2M19 3h2M17 5l1.5-1.5'
+                ],
+                viewBox: '0 0 24 24'
+            };
+        }
+        return {
+            paths: ['M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z'],
+            viewBox: '0 0 24 24'
+        };
+    }
+    
+    // デフォルト（星）
+    return {
+        paths: ['M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z'],
+        viewBox: '0 0 24 24'
+    };
+}
+
+let currentSvg = null;
+
+document.addEventListener('DOMContentLoaded', () => {
+    // 例のチップをクリック
+    document.querySelectorAll('.example-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+            document.getElementById('prompt').value = chip.textContent;
+            generateIcon();
+        });
+    });
+    
+    // イベントリスナー
+    document.getElementById('generateBtn').addEventListener('click', generateIcon);
+    document.getElementById('downloadBtn').addEventListener('click', downloadSvg);
+    document.getElementById('copyBtn').addEventListener('click', copySvg);
+    
+    // スライダー
+    document.getElementById('iconSize').addEventListener('input', (e) => {
+        document.getElementById('sizeValue').textContent = e.target.value;
+        if (currentSvg) displaySvg();
+    });
+    
+    document.getElementById('strokeWidth').addEventListener('input', (e) => {
+        document.getElementById('strokeValue').textContent = e.target.value;
+        if (currentSvg) displaySvg();
+    });
+    
+    document.getElementById('strokeColor').addEventListener('input', () => {
+        if (currentSvg) displaySvg();
+    });
+    
+    document.getElementById('complexity').addEventListener('change', () => {
+        if (currentSvg) generateIcon();
+    });
+    
+    // Enterキーで生成
+    document.getElementById('prompt').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            generateIcon();
+        }
+    });
+});
+
+function generateIcon() {
+    const prompt = document.getElementById('prompt').value.trim();
+    if (!prompt) {
+        showError('プロンプトを入力してください');
+        return;
+    }
+    
+    const generateBtn = document.getElementById('generateBtn');
+    const preview = document.getElementById('svgPreview');
+    
+    generateBtn.disabled = true;
+    generateBtn.textContent = '生成中...';
+    preview.classList.add('generating');
+    hideError();
+    
+    // 少し遅延を入れてアニメーション効果を演出
+    setTimeout(() => {
+        try {
+            currentSvg = generateSvgPath(prompt);
+            displaySvg();
+            document.getElementById('actionButtons').style.display = 'flex';
+            preview.classList.remove('generating');
+        } catch (error) {
+            showError('生成に失敗しました');
+            preview.classList.remove('generating');
+        } finally {
+            generateBtn.disabled = false;
+            generateBtn.textContent = 'アイコンを生成';
+        }
+    }, 800);
+}
+
+function displaySvg() {
+    const size = document.getElementById('iconSize').value;
+    const strokeWidth = document.getElementById('strokeWidth').value;
+    const color = document.getElementById('strokeColor').value;
+    
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('width', size);
+    svg.setAttribute('height', size);
+    svg.setAttribute('viewBox', currentSvg.viewBox);
+    
+    currentSvg.paths.forEach(pathData => {
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', pathData);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', color);
+        path.setAttribute('stroke-width', strokeWidth);
+        path.setAttribute('stroke-linecap', 'round');
+        path.setAttribute('stroke-linejoin', 'round');
+        svg.appendChild(path);
+    });
+    
+    const preview = document.getElementById('svgPreview');
+    preview.innerHTML = '';
+    preview.appendChild(svg);
+}
+
+async function copySvg() {
+    const svgElement = document.querySelector('#svgPreview svg');
+    if (!svgElement) return;
+    
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+    const copyBtn = document.getElementById('copyBtn');
+    
+    try {
+        await navigator.clipboard.writeText(svgData);
+        
+        copyBtn.textContent = 'コピーしました！';
+        copyBtn.classList.add('copied');
+        
+        setTimeout(() => {
+            copyBtn.textContent = 'SVGをコピー';
+            copyBtn.classList.remove('copied');
+        }, 2000);
+    } catch (err) {
+        showError('クリップボードへのコピーに失敗しました');
+    }
+}
+
+function downloadSvg() {
+    const svgElement = document.querySelector('#svgPreview svg');
+    if (!svgElement) return;
+    
+    const svgData = new XMLSerializer().serializeToString(svgElement);
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const svgUrl = URL.createObjectURL(svgBlob);
+    
+    const downloadLink = document.createElement('a');
+    downloadLink.href = svgUrl;
+    downloadLink.download = 'icon.svg';
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+    URL.revokeObjectURL(svgUrl);
+}
+
+function showError(message) {
+    const errorElement = document.getElementById('errorMessage');
+    errorElement.textContent = message;
+    errorElement.style.display = 'block';
+}
+
+function hideError() {
+    document.getElementById('errorMessage').style.display = 'none';
+}
+    </script>
+</body>
+</html>
