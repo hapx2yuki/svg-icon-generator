@@ -251,6 +251,35 @@ main {
     font-size: 1.1em;
 }
 
+.button-group {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    align-items: center;
+}
+
+#copyBtn {
+    padding: 12px 30px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+#copyBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+#copyBtn.copied {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
 @media (max-width: 768px) {
     header h1 {
         font-size: 2.5em;
@@ -267,6 +296,15 @@ main {
     }
     
     .option-group input[type="range"] {
+        width: 100%;
+    }
+    
+    .button-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    #copyBtn, #downloadBtn {
         width: 100%;
     }
 }
