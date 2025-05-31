@@ -147,6 +147,9 @@ class UltimateSvgEngine {
     createStructure(concept, complexity) {
         const structures = [];
         
+        // デバッグ用
+        console.log('Creating structure for concept:', concept);
+        
         // メインコンセプトに基づいて基本構造を生成
         switch (concept.primary) {
             case 'movement':
@@ -168,36 +171,47 @@ class UltimateSvgEngine {
                 structures.push(...this.createArtisticStructure(complexity));
         }
         
+        // 構造が生成されない場合はデフォルトを追加
+        if (structures.length === 0) {
+            structures.push(...this.createArtisticStructure(complexity));
+        }
+        
         // 補助的な要素を追加
-        if (concept.all.emotion.length > 0) {
+        if (concept.all.emotion && concept.all.emotion.length > 0) {
             structures.push(...this.addEmotionalElements(concept.all.emotion, complexity));
         }
         
+        console.log('Generated structures:', structures.length);
         return structures;
     }
     
     createMovementStructure(types, complexity) {
         const structures = [];
         
-        if (types.includes('flow')) {
-            structures.push(this.createFlowField(complexity));
-        }
-        if (types.includes('rotation')) {
-            structures.push(this.createRotationalPattern(complexity));
-        }
-        if (types.includes('wave')) {
-            structures.push(this.createWavePattern(complexity));
-        }
-        if (types.includes('energy')) {
-            structures.push(this.createEnergyField(complexity));
+        if (types.length === 0) {
+            // デフォルトで流れを追加
+            structures.push(...this.createFlowField(complexity));
+        } else {
+            if (types.includes('flow')) {
+                structures.push(...this.createFlowField(complexity));
+            }
+            if (types.includes('rotation')) {
+                structures.push(...this.createRotationalPattern(complexity));
+            }
+            if (types.includes('wave')) {
+                structures.push(...this.createWavePattern(complexity));
+            }
+            if (types.includes('energy')) {
+                structures.push(...this.createEnergyField(complexity));
+            }
         }
         
         return structures;
     }
     
     createFlowField(complexity) {
-        const points = [];
-        const streams = Math.floor(complexity / 2);
+        const structures = [];
+        const streams = Math.max(1, Math.floor(complexity / 2));
         
         for (let i = 0; i < streams; i++) {
             const angle = (i / streams) * Math.PI * 2;
@@ -212,7 +226,7 @@ class UltimateSvgEngine {
                 flow.push({ x, y, tension: 0.7 });
             }
             
-            points.push({
+            structures.push({
                 type: 'flow',
                 points: flow,
                 closed: false,
@@ -220,7 +234,7 @@ class UltimateSvgEngine {
             });
         }
         
-        return points;
+        return structures;
     }
     
     createRotationalPattern(complexity) {
@@ -1008,11 +1022,14 @@ class UltimateSvgEngine {
         const { points, closed, type } = structure;
         let d = '';
         
-        if (points.length === 0) return '';
+        if (!points || points.length === 0) return { d: '', type };
         
-        d += `M ${points[0].x} ${points[0].y}`;
+        // 数値を確実に文字列に変換
+        const formatNum = (n) => (typeof n === 'number' ? n.toFixed(2) : '0');
         
-        if (structure.smooth) {
+        d += `M ${formatNum(points[0].x)} ${formatNum(points[0].y)}`;
+        
+        if (structure.smooth && points.length > 2) {
             // スムーズなベジェ曲線
             for (let i = 1; i < points.length; i++) {
                 const prev = points[i - 1];
@@ -1024,16 +1041,16 @@ class UltimateSvgEngine {
                 const cp2x = curr.x - (next.x - curr.x) * 0.5;
                 const cp2y = curr.y - (next.y - curr.y) * 0.5;
                 
-                d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${curr.x} ${curr.y}`;
+                d += ` C ${formatNum(cp1x)} ${formatNum(cp1y)}, ${formatNum(cp2x)} ${formatNum(cp2y)}, ${formatNum(curr.x)} ${formatNum(curr.y)}`;
             }
         } else {
             // 直線
             for (let i = 1; i < points.length; i++) {
-                d += ` L ${points[i].x} ${points[i].y}`;
+                d += ` L ${formatNum(points[i].x)} ${formatNum(points[i].y)}`;
             }
         }
         
-        if (closed) {
+        if (closed && points.length > 2) {
             d += ' Z';
         }
         
@@ -1185,25 +1202,38 @@ async function generateUltimateIcon() {
     animationDiv.style.display = 'flex';
     preview.innerHTML = '';
     
-    // オプションを取得
-    const options = {
-        complexity: parseInt(document.getElementById('complexitySlider').value),
-        smoothness: parseInt(document.getElementById('smoothness').value),
-        randomness: parseInt(document.getElementById('randomness').value),
-        symmetry: parseInt(document.getElementById('symmetry').value),
-        mode: currentMode
-    };
-    
-    // 生成（非同期をシミュレート）
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    currentResult = engine.generateFromPrompt(prompt, options);
-    displaySvg(currentResult);
-    updateStats(currentResult.stats);
-    
-    animationDiv.style.display = 'none';
-    document.getElementById('exportButtons').style.display = 'flex';
-    document.getElementById('stats').style.display = 'grid';
+    try {
+        // オプションを取得
+        const options = {
+            complexity: parseInt(document.getElementById('complexitySlider').value),
+            smoothness: parseInt(document.getElementById('smoothness').value),
+            randomness: parseInt(document.getElementById('randomness').value),
+            symmetry: parseInt(document.getElementById('symmetry').value),
+            mode: currentMode
+        };
+        
+        console.log('Generating with options:', options);
+        
+        // 生成（非同期をシミュレート）
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        currentResult = engine.generateFromPrompt(prompt, options);
+        console.log('Generated result:', currentResult);
+        
+        if (currentResult && currentResult.svg && currentResult.svg.paths.length > 0) {
+            displaySvg(currentResult);
+            updateStats(currentResult.stats);
+            document.getElementById('exportButtons').style.display = 'flex';
+            document.getElementById('stats').style.display = 'grid';
+        } else {
+            throw new Error('SVG生成に失敗しました');
+        }
+    } catch (error) {
+        console.error('Generation error:', error);
+        preview.innerHTML = '<p style="color: #ef4444;">生成エラー: ' + error.message + '</p>';
+    } finally {
+        animationDiv.style.display = 'none';
+    }
 }
 
 function displaySvg(result) {
